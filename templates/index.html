@@ -1,155 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Rescue AI - Enterprise Supermarket Optimizer</title>
+    <title>Food Rescue AI | Enterprise MLOps Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="min-h-screen flex flex-col p-6">
+<body class="min-h-screen flex flex-col p-6 lg:p-8">
 
-    <header class="glass rounded-2xl p-6 mb-8 flex justify-between items-center shadow-xl">
+    <header class="glass-panel rounded-2xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center shadow-2xl gap-4">
         <div class="flex items-center space-x-4">
-            <div class="bg-emerald-600 text-white p-3 rounded-xl flex items-center justify-center w-12 h-12 shadow-lg shadow-emerald-600/30">
-                <i class="fa-solid fa-seedling text-2xl"></i>
+            <div class="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white p-3.5 rounded-2xl flex items-center justify-center w-14 h-14 shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-network-wired text-2xl"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                    Food Rescue AI <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">Enterprise Suite</span>
-                </h1>
-                <p class="text-xs text-slate-400">Supermarket Qida İtqisi və Maliyyə Optimizasiya Mühərriki</p>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-black tracking-tight text-white">Food Rescue AI</h1>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-mono uppercase tracking-wider">Production v3.0</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Autonomous Retail Waste Reduction & Dynamic Pricing MLOps Platform</p>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <button onclick="toggleAnalyticsModal()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 font-semibold px-4 py-3 rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer text-xs">
-                <i class="fa-solid fa-chart-pie"></i> Ətraflı Analitika (Satılanlar / İsraf)
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+            <a href="/powerbi" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer text-xs">
+                <i class="fa-solid fa-chart-pie"></i> Power BI Category Analysis
+            </a>
+            <button onclick="toggleAnalyticsModal()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer text-xs">
+                <i class="fa-solid fa-chart-column text-emerald-400"></i> Risk Breakdown
             </button>
-            <button onclick="runOptimization()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-3 rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer text-xs">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> AI Strategiyanı İcra Et
+            <button onclick="runPipelineOptimization()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer text-xs">
+                <i class="fa-solid fa-bolt"></i> Execute AI Pipeline
             </button>
         </div>
     </header>
 
-    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- Left: Upload & Complete Financial Metrics -->
-        <div class="space-y-6">
-            <div class="glass rounded-2xl p-6 shadow-xl space-y-4">
-                <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-file-excel text-emerald-500"></i> Excel Hesabatı Yüklə
+    <main class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <div class="space-y-6 lg:col-span-1">
+            <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-3 border-emerald-500/20">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-emerald-400"></i> Quick Simulation
                 </h2>
-                <form action="/api/upload_excel" method="POST" enctype="multipart/form-data" class="space-y-3">
-                    <input type="file" name="file" accept=".xlsx, .xls, .csv" required class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer">
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/20">
-                        <i class="fa-solid fa-upload"></i> Excel-i Oxu & ML Analiz Et
-                    </button>
-                </form>
-                <form action="/api/clear" method="POST">
-                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer border border-slate-700">
-                        <i class="fa-solid fa-trash-can"></i> Nəticələri Təmizlə
-                    </button>
-                </form>
+                <button onclick="triggerDemoLoad()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/20">
+                    <i class="fa-solid fa-play"></i> Load Enterprise Demo Data
+                </button>
             </div>
 
-            <!-- Complete Financial Impact Cards -->
-            <div class="glass rounded-2xl p-6 shadow-xl space-y-4">
-                <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-line text-emerald-500"></i> Ümumi Biznes Təsiri & Maliyyə
+            <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-4">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-up text-emerald-400"></i> Data Ingestion
                 </h2>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                        <p class="text-[11px] text-slate-400">Xilas Edilən Qida</p>
-                        <p class="text-lg font-bold text-emerald-400 font-mono mt-1">{{ saved_food }} Ton</p>
+                <form id="uploadForm" class="space-y-3" onsubmit="handleFileUpload(event)">
+                    <input type="file" id="fileInput" name="file" accept=".xlsx, .xls, .csv" required class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-emerald-400 hover:file:bg-slate-700 cursor-pointer">
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer border border-slate-700">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Ingest & Process
+                    </button>
+                </form>
+                <button onclick="clearSystemData()" class="w-full bg-transparent hover:bg-red-500/10 text-red-400 font-medium py-2 rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer border border-red-500/20">
+                    <i class="fa-solid fa-trash"></i> Purge Dataset
+                </button>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-5 shadow-xl space-y-3.5">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Financial Impact
+                </h2>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+                        <p class="text-[10px] uppercase text-slate-400">Saved Food</p>
+                        <p class="text-base font-bold text-emerald-400 font-mono mt-0.5">{{ saved_food }} Tons</p>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                        <p class="text-[11px] text-slate-400">Zərərdən Qurtarılan</p>
-                        <p class="text-lg font-bold text-emerald-400 font-mono mt-1">~{{ saved_money }} ₼</p>
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+                        <p class="text-[10px] uppercase text-slate-400">Recovered</p>
+                        <p class="text-base font-bold text-emerald-400 font-mono mt-0.5">~{{ saved_money }} ₼</p>
                     </div>
                 </div>
-
-                <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                    <p class="text-xs text-slate-400">Ümumi Malların Maya Dəyəri (Xərc)</p>
-                    <p class="text-xl font-bold text-slate-200 font-mono mt-1">{{ total_cost_value }} AZN</p>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+                    <p class="text-[10px] uppercase text-slate-400">Total Capital Cost</p>
+                    <p class="text-lg font-bold text-slate-200 font-mono mt-0.5">{{ total_cost_value }} ₼</p>
                 </div>
-
-                <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                    <p class="text-xs text-slate-400">Bütün Malların Satışından Gəlir</p>
-                    <p class="text-xl font-bold text-emerald-400 font-mono mt-1">{{ total_sales_value }} AZN</p>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+                    <p class="text-[10px] uppercase text-slate-400">Projected Revenue</p>
+                    <p class="text-lg font-bold text-emerald-400 font-mono mt-0.5">{{ total_sales_value }} ₼</p>
                 </div>
-
-                <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                    <p class="text-xs text-slate-400">Potensial Ümumi Mənfəət (Satış - Maya)</p>
-                    <p class="text-xl font-bold text-cyan-400 font-mono mt-1">{{ total_potential_profit }} AZN</p>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+                    <p class="text-[10px] uppercase text-slate-400">Net Profit</p>
+                    <p class="text-lg font-bold text-cyan-400 font-mono mt-0.5">{{ total_potential_profit }} ₼</p>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Filter Buttons & Main Table -->
-        <div class="lg:col-span-2 glass rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="lg:col-span-3 glass-panel rounded-2xl p-6 shadow-xl space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-tags text-emerald-500"></i> AI Qərar və Qiymət Paneli
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Inventory Decision Stream
                 </h2>
-                
-                <div class="flex flex-wrap gap-2 text-xs">
-                    <a href="/?filter=all" class="px-3 py-1.5 rounded-lg font-semibold transition {% if current_filter == 'all' %}bg-emerald-600 text-white shadow-lg{% else %}bg-slate-800 text-slate-400 hover:bg-slate-700{% endif %}">
-                        Hamısı
-                    </a>
-                    <a href="/?filter=critical" class="px-3 py-1.5 rounded-lg font-semibold transition {% if current_filter == 'critical' %}bg-red-600 text-white shadow-lg{% else %}bg-slate-800 text-slate-400 hover:bg-slate-700{% endif %}">
-                        🎁 Kritik / İanə
-                    </a>
-                    <a href="/?filter=discount" class="px-3 py-1.5 rounded-lg font-semibold transition {% if current_filter == 'discount' %}bg-amber-600 text-white shadow-lg{% else %}bg-slate-800 text-slate-400 hover:bg-slate-700{% endif %}">
-                        ⚠️ Endirimdə olanlar
-                    </a>
-                    <a href="/?filter=normal" class="px-3 py-1.5 rounded-lg font-semibold transition {% if current_filter == 'normal' %}bg-emerald-700 text-white shadow-lg{% else %}bg-slate-800 text-slate-400 hover:bg-slate-700{% endif %}">
-                        ✅ Normal
-                    </a>
+
+                <div class="flex flex-wrap gap-1.5 text-xs bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+                    <a href="/?filter=all" class="px-3 py-1.5 rounded-lg font-medium transition {% if current_filter == 'all' %}bg-emerald-600 text-white shadow-md{% else %}text-slate-400 hover:text-white{% endif %}">All SKU</a>
+                    <a href="/?filter=critical" class="px-3 py-1.5 rounded-lg font-medium transition {% if current_filter == 'critical' %}bg-red-600 text-white shadow-md{% else %}text-slate-400 hover:text-white{% endif %}">Critical / Donate</a>
+                    <a href="/?filter=discount" class="px-3 py-1.5 rounded-lg font-medium transition {% if current_filter == 'discount' %}bg-amber-600 text-white shadow-md{% else %}text-slate-400 hover:text-white{% endif %}">At Risk / Discount</a>
+                    <a href="/?filter=normal" class="px-3 py-1.5 rounded-lg font-medium transition {% if current_filter == 'normal' %}bg-emerald-700 text-white shadow-md{% else %}text-slate-400 hover:text-white{% endif %}">Secure</a>
                 </div>
             </div>
 
-            <div class="overflow-x-auto max-h-[550px]">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="sticky top-0 bg-slate-900/90 backdrop-blur">
-                        <tr class="border-b border-slate-700 text-slate-400 text-xs">
-                            <th class="pb-3 pt-2">Məhsul</th>
-                            <th class="pb-3 pt-2">Qalan Gün</th>
-                            <th class="pb-3 pt-2">Stok</th>
-                            <th class="pb-3 pt-2">Maya Dəyəri</th>
-                            <th class="pb-3 pt-2">Satış Qiymət</th>
-                            <th class="pb-3 pt-2">Endirim</th>
-                            <th class="pb-3 pt-2 text-emerald-400">Tövsiyə Qiymət</th>
-                            <th class="pb-3 pt-2">AI Qərarı</th>
+            <div class="overflow-x-auto max-h-[580px] rounded-xl border border-slate-800/80">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="sticky top-0 bg-slate-950/95 backdrop-blur text-slate-400 uppercase font-mono tracking-wider text-[10px]">
+                        <tr class="border-b border-slate-800">
+                            <th class="py-3 px-4">Product Name</th>
+                            <th class="py-3 px-4">Category</th>
+                            <th class="py-3 px-4">Expires In</th>
+                            <th class="py-3 px-4">Stock</th>
+                            <th class="py-3 px-4">Cost Price</th>
+                            <th class="py-3 px-4">Original Price</th>
+                            <th class="py-3 px-4 text-emerald-400">AI Rec. Price</th>
+                            <th class="py-3 px-4">Decision Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-800">
+                    <tbody class="divide-y divide-slate-800/60">
                         {% if inventory %}
                             {% for item in inventory %}
-                            <tr class="hover:bg-slate-800/40 transition">
-                                <td class="py-3 font-semibold text-white text-xs">{{ item.product }}</td>
-                                <td class="py-3 font-mono text-xs">{{ item.days_to_expire }} gün</td>
-                                <td class="py-3 font-mono text-xs">{{ item.stock }} əd</td>
-                                <td class="py-3 font-mono text-xs text-slate-400">{{ item.cost_price }} ₼</td>
-                                <td class="py-3 font-mono text-xs {% if item.discount_pct > 0 %}line-through text-slate-500{% else %}text-white font-bold{% endif %}">
-                                    {{ item.original_price }} ₼
-                                </td>
-                                <td class="py-3 font-mono text-xs {% if item.discount_pct > 0 %}text-amber-400 font-bold{% else %}text-slate-500{% endif %}">
-                                    {% if item.discount_pct > 0 %}{{ item.discount_pct }}%{% else %}0%{% endif %}
-                                </td>
-                                <td class="py-3 font-mono text-xs text-emerald-400 font-bold">
-                                    {% if item.discount_pct == 100 %}
-                                        <span class="text-red-400">İanə (0 ₼)</span>
-                                    {% else %}
-                                        {{ item.recommended_price }} ₼
-                                    {% endif %}
-                                </td>
-                                <td class="py-3">
-                                    <span class="px-2 py-1 rounded-md text-[10px] font-semibold border bg-{{ item.color }}-500/10 text-{{ item.color }}-400 border-{{ item.color }}-500/30">
+                            <tr class="hover:bg-slate-800/30 transition">
+                                <td class="py-3 px-4 font-semibold text-white">{{ item.product }}</td>
+                                <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">{{ item.category }}</td>
+                                <td class="py-3 px-4 font-mono">{{ item.days_to_expire }} days</td>
+                                <td class="py-3 px-4 font-mono">{{ item.stock }} units</td>
+                                <td class="py-3 px-4 font-mono text-slate-400">{{ item.cost_price }} ₼</td>
+                                <td class="py-3 px-4 font-mono {% if item.discount_pct > 0 %}line-through text-slate-500{% else %}text-white font-semibold{% endif %}">{{ item.original_price }} ₼</td>
+                                <td class="py-3 px-4 font-mono text-emerald-400 font-bold">{% if item.discount_pct == 100 %}<span class="text-red-400">Donate (0 ₼)</span>{% else %}{{ item.recommended_price }} ₼{% endif %}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2.5 py-1 rounded-md text-[10px] font-medium border bg-{{ item.color }}-500/10 text-{{ item.color }}-400 border-{{ item.color }}-500/30">
                                         {{ item.action }}
                                     </span>
                                 </td>
@@ -157,8 +140,9 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="8" class="py-12 text-center text-slate-500 text-sm">
-                                    Heç bir məlumat tapılmadı. Sol tərəfdən Excel faylı yükləyin.
+                                <td colspan="8" class="py-16 text-center text-slate-500">
+                                    <i class="fa-solid fa-folder-open text-3xl mb-2 block opacity-40"></i>
+                                    No active dataset loaded. Click <b>"Load Enterprise Demo Data"</b> to initialize.
                                 </td>
                             </tr>
                         {% endif %}
@@ -169,30 +153,28 @@
 
     </main>
 
-    <!-- Analytics Modal (Satılmayan/İsraf Olunanlar vs Normal Satılanlar) -->
-    <div id="analyticsModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-        <div class="glass border border-slate-700 rounded-2xl w-full max-w-4xl p-6 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-emerald-500"></i> Ətraflı Anbar Analitikası & Hesabat
+    <div id="analyticsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-6 z-50">
+        <div class="glass-panel border border-slate-700 rounded-2xl w-full max-w-4xl p-6 shadow-2xl space-y-6 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-emerald-400"></i> Detailed Inventory Risk Analytics
                 </h3>
-                <button onclick="toggleAnalyticsModal()" class="text-slate-400 hover:text-white text-lg cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
+                <button onclick="toggleAnalyticsModal()" class="text-slate-400 hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Riskli / İsraf Olunan Mallar -->
-                <div class="space-y-3 bg-slate-900/50 p-4 rounded-xl border border-red-500/20">
-                    <h4 class="font-bold text-red-400 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Rəfdə Qalan / İsraf Riski Olan Mallar ({{ wasted_risk_items | length }})
+                <div class="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-red-500/20">
+                    <h4 class="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> High Risk / Waste Candidates ({{ wasted_risk_items | length }})
                     </h4>
-                    <div class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                    <div class="space-y-2 max-h-60 overflow-y-auto text-xs pr-1">
                         {% for item in wasted_risk_items %}
-                        <div class="flex justify-between items-center bg-slate-800/60 p-2.5 rounded-lg border border-slate-700">
+                        <div class="flex justify-between items-center bg-slate-800/50 p-2.5 rounded-lg border border-slate-700/60">
                             <div>
                                 <p class="font-semibold text-white">{{ item.product }}</p>
-                                <p class="text-[10px] text-slate-400">Qalan gün: <span class="text-red-400 font-bold">{{ item.days_to_expire }} gün</span> | Stok: {{ item.stock }} əd</p>
+                                <p class="text-[10px] text-slate-400">Expires: <span class="text-red-400 font-bold">{{ item.days_to_expire }}d</span> | Stock: {{ item.stock }}</p>
                             </div>
                             <span class="text-amber-400 font-mono font-bold">{{ item.action }}</span>
                         </div>
@@ -200,17 +182,16 @@
                     </div>
                 </div>
 
-                <!-- Normal / Uğurla Satılan Mallar -->
-                <div class="space-y-3 bg-slate-900/50 p-4 rounded-xl border border-emerald-500/20">
-                    <h4 class="font-bold text-emerald-400 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check"></i> Normal Satışda Olan / Təhlükəsiz Mallar ({{ safe_sold_items | length }})
+                <div class="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-emerald-500/20">
+                    <h4 class="font-bold text-emerald-400 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Secure / Normal Stock ({{ safe_sold_items | length }})
                     </h4>
-                    <div class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                    <div class="space-y-2 max-h-60 overflow-y-auto text-xs pr-1">
                         {% for item in safe_sold_items %}
-                        <div class="flex justify-between items-center bg-slate-800/60 p-2.5 rounded-lg border border-slate-700">
+                        <div class="flex justify-between items-center bg-slate-800/50 p-2.5 rounded-lg border border-slate-700/60">
                             <div>
                                 <p class="font-semibold text-white">{{ item.product }}</p>
-                                <p class="text-[10px] text-slate-400">Qalan gün: <span class="text-emerald-400 font-bold">{{ item.days_to_expire }} gün</span> | Stok: {{ item.stock }} əd</p>
+                                <p class="text-[10px] text-slate-400">Expires: <span class="text-emerald-400 font-bold">{{ item.days_to_expire }}d</span> | Stock: {{ item.stock }}</p>
                             </div>
                             <span class="text-emerald-400 font-mono font-bold">{{ item.original_price }} ₼</span>
                         </div>
@@ -221,31 +202,102 @@
         </div>
     </div>
 
-    <!-- Notification Modal -->
-    <div id="resultModal" class="hidden fixed bottom-6 right-6 glass border border-emerald-500/40 rounded-2xl p-5 shadow-2xl max-w-md animate-bounce z-50">
+    <div id="toastNotification" class="hidden fixed bottom-6 right-6 glass-panel border border-emerald-500/40 rounded-2xl p-4 shadow-2xl max-w-sm z-50">
         <div class="flex items-start gap-3">
-            <i class="fa-solid fa-circle-check text-emerald-400 text-2xl mt-0.5"></i>
+            <div class="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl">
+                <i class="fa-solid fa-check text-base"></i>
+            </div>
             <div>
-                <h4 class="font-bold text-emerald-300 text-sm">ML Optimizasiya Tamamlandı</h4>
-                <p id="modalText" class="text-xs text-slate-300 mt-1 font-mono leading-relaxed"></p>
+                <h4 class="font-bold text-emerald-300 text-xs uppercase tracking-wider">System Pipeline Executed</h4>
+                <p id="toastText" class="text-xs text-slate-300 mt-1 font-mono leading-relaxed"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorToast" class="hidden fixed bottom-6 right-6 glass-panel border border-red-500/40 rounded-2xl p-4 shadow-2xl max-w-sm z-50">
+        <div class="flex items-start gap-3">
+            <div class="bg-red-500/20 text-red-400 p-2 rounded-xl">
+                <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-red-300 text-xs uppercase tracking-wider">Error</h4>
+                <p id="errorToastText" class="text-xs text-slate-300 mt-1 font-mono leading-relaxed"></p>
             </div>
         </div>
     </div>
 
     <script>
         function toggleAnalyticsModal() {
-            let modal = document.getElementById('analyticsModal');
-            modal.classList.toggle('hidden');
+            document.getElementById('analyticsModal').classList.toggle('hidden');
         }
 
-        async function runOptimization() {
-            let response = await fetch('/api/optimize', { method: 'POST' });
-            let data = await response.json();
-            if(data.status === 'success') {
-                let modal = document.getElementById('resultModal');
-                let modalText = document.getElementById('modalText');
-                modalText.textContent = `${data.saved_food} | ~${data.saved_money} ₼ — ${data.message}`;
-                modal.classList.remove('hidden');
+        function showError(message) {
+            let toast = document.getElementById('errorToast');
+            document.getElementById('errorToastText').textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        async function triggerDemoLoad() {
+            try {
+                let res = await fetch('/api/load_demo', { method: 'POST' });
+                let data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    showError(data.message || 'Failed to load demo data.');
+                }
+            } catch (err) {
+                showError('Network error while loading demo data.');
+            }
+        }
+
+        async function clearSystemData() {
+            try {
+                let res = await fetch('/api/clear', { method: 'POST' });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    showError('Failed to clear dataset.');
+                }
+            } catch (err) {
+                showError('Network error while clearing dataset.');
+            }
+        }
+
+        async function handleFileUpload(event) {
+            event.preventDefault();
+            let formData = new FormData(document.getElementById('uploadForm'));
+            try {
+                let res = await fetch('/api/upload_excel', { method: 'POST', body: formData });
+                let data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    showError(data.message || 'Failed to process file.');
+                }
+            } catch (err) {
+                showError('Network error while uploading file.');
+            }
+        }
+
+        async function runPipelineOptimization() {
+            try {
+                let res = await fetch('/api/optimize', { method: 'POST' });
+                let data = await res.json();
+                if (data.status === 'success') {
+                    let toast = document.getElementById('toastNotification');
+                    document.getElementById('toastText').textContent = data.message;
+                    toast.classList.remove('hidden');
+                    setTimeout(() => {
+                        toast.classList.add('hidden');
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showError(data.message || 'Pipeline execution failed.');
+                }
+            } catch (err) {
+                showError('Network error while executing pipeline.');
             }
         }
     </script>

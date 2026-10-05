@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Rescue AI - Enterprise Power BI Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="min-h-screen flex flex-col p-4 lg:p-6 select-none bg-[#070b14] text-slate-300">
+
+    <header class="bi-card rounded-2xl p-4 mb-4 flex justify-between items-center shadow-lg border border-emerald-900/40">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-700 text-white px-3 py-1.5 rounded-xl font-bold text-xs font-mono tracking-wider shadow">
+                POWER BI
+            </div>
+            <h1 class="text-sm font-black tracking-wide text-white">Food Rescue & Retail Performance Analytics Dashboard</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="executeAiPipeline()" class="bg-cyan-700 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded-xl transition text-xs flex items-center gap-2 shadow-lg shadow-cyan-900/30 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Execute ML Pipeline
+            </button>
+            <a href="/api/export_report" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl transition text-xs flex items-center gap-2 shadow-lg shadow-emerald-900/30">
+                <i class="fa-solid fa-file-excel"></i> Export Report
+            </a>
+            <a href="/" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-4 py-2 rounded-xl transition text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left text-emerald-400"></i> Back to Main
+            </a>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-6 gap-4 flex-1">
+
+        <aside class="bi-card rounded-2xl p-4 flex flex-col justify-between lg:col-span-1 space-y-4 bg-[#061e1a] border-emerald-900/30">
+            <div class="space-y-4">
+                <div class="text-center pb-3 border-b border-emerald-900/40">
+                    <div class="w-12 h-12 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-2 font-bold text-base shadow-inner">BI</div>
+                    <p class="text-xs font-black text-white">Analytics Suite</p>
+                </div>
+                <div class="space-y-2">
+                    <button onclick="switchTab('overview', this)" class="sidebar-btn active w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-3">
+                        <i class="fa-solid fa-chart-pie text-emerald-400"></i> Overview & Charts
+                    </button>
+                    <button onclick="switchTab('risk', this)" class="sidebar-btn w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-3">
+                        <i class="fa-solid fa-table text-emerald-400"></i> Filtered Data & Details
+                    </button>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-emerald-900/40 text-center text-[10px] text-slate-400 font-mono">
+                Group 2 BMU © 2026
+            </div>
+        </aside>
+
+        <div class="lg:col-span-5 flex flex-col space-y-4">
+
+            <div class="bi-card rounded-2xl p-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block font-semibold">Year</span>
+                    <select class="bg-transparent font-bold text-slate-100 w-full outline-none cursor-pointer mt-0.5">
+                        <option value="2026" class="bg-slate-900">2026 (Current)</option>
+                    </select>
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block font-semibold">Month Name</span>
+                    <select class="bg-transparent font-bold text-emerald-400 w-full outline-none cursor-pointer mt-0.5">
+                        <option value="september" class="bg-slate-900" selected>September (Active Live)</option>
+                    </select>
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block font-semibold">Status</span>
+                    <select class="bg-transparent font-bold text-slate-100 w-full outline-none cursor-pointer mt-0.5">
+                        <option value="all" class="bg-slate-900">All (Active)</option>
+                    </select>
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+                    <span class="text-[10px] text-slate-400 block font-semibold">Priority / Risk</span>
+                    <select id="mainFilter" onchange="filterTableByDropdown(this.value)" class="bg-transparent font-bold text-emerald-400 w-full outline-none cursor-pointer mt-0.5">
+                        <option value="all" class="bg-slate-900">All Levels (Show All)</option>
+                        <option value="High" class="bg-slate-900">High Risk Only</option>
+                        <option value="Medium" class="bg-slate-900">Medium Risk Only</option>
+                        <option value="Low" class="bg-slate-900">Low Risk Only</option>
+                    </select>
+                </div>
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 col-span-2 md:col-span-1">
+                    <span class="text-[10px] text-slate-400 block font-semibold">Department</span>
+                    <select class="bg-transparent font-bold text-slate-100 w-full outline-none cursor-pointer mt-0.5">
+                        <option value="ict" class="bg-slate-900">ICT & Retail</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div class="bi-card rounded-2xl p-4 text-center shadow">
+                    <p class="text-[11px] text-slate-400 font-medium">Total SKUs</p>
+                    <p class="text-xl font-black text-slate-100 font-mono mt-1">{{ metrics.total_skus }}</p>
+                </div>
+                <div class="bi-card rounded-2xl p-4 text-center shadow">
+                    <p class="text-[11px] text-slate-400 font-medium">Total Cost</p>
+                    <p class="text-xl font-black text-emerald-400 font-mono mt-1">{{ metrics.total_cost }} ₼</p>
+                </div>
+                <div class="bi-card rounded-2xl p-4 text-center shadow">
+                    <p class="text-[11px] text-slate-400 font-medium">Planned Budget</p>
+                    <p class="text-xl font-black text-cyan-400 font-mono mt-1">{{ metrics.total_revenue }} ₼</p>
+                </div>
+                <div class="bi-card rounded-2xl p-4 text-center shadow">
+                    <p class="text-[11px] text-slate-400 font-medium">High Risk Items</p>
+                    <p class="text-xl font-black text-red-400 font-mono mt-1">{{ metrics.high_risk_count }}</p>
+                </div>
+                <div class="bi-card rounded-2xl p-4 text-center col-span-2 md:col-span-1 shadow">
+                    <p class="text-[11px] text-slate-400 font-medium">Efficiency</p>
+                    <p class="text-xl font-black text-emerald-300 font-mono mt-1">{{ metrics.efficiency }}</p>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-emerald-900/40 via-teal-900/30 to-slate-900/80 border border-emerald-500/30 p-3 rounded-2xl text-xs flex items-center justify-between shadow">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shrink-0">
+                        <i class="fa-solid fa-brain animate-pulse"></i>
+                    </div>
+                    <div>
+                        <p class="text-white font-bold">Rule-Based AI Pricing Engine Active</p>
+                        <p class="text-[11px] text-slate-300">Model scores expiry, temperature and demand velocity to set actions and pricing.</p>
+                    </div>
+                </div>
+                <span class="font-mono text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-lg border border-emerald-500/30 shrink-0">Engine Active</span>
+            </div>
+
+            <div id="tab-overview" class="tab-content active space-y-4">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    <div class="bi-card rounded-2xl p-5 space-y-3 shadow">
+                        <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">SKUs by Priority</h3>
+                        <div class="h-48 w-full relative">
+                            <canvas id="barPriorityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bi-card rounded-2xl p-5 space-y-3 shadow flex flex-col justify-between items-center text-center">
+                        <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider w-full text-left">Secure Inventory Rate</h3>
+                        <div class="h-36 w-36 relative my-auto">
+                            <canvas id="gaugeCompletionChart"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col pt-3">
+                                <span class="text-xl font-black text-white font-mono">{{ metrics.secure_pct }}%</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between w-full text-[10px] text-slate-400 font-mono border-t border-slate-800 pt-2">
+                            <span>0.0%</span>
+                            <span>Target: 100%</span>
+                        </div>
+                    </div>
+
+                    <div class="bi-card rounded-2xl p-5 space-y-3 shadow">
+                        <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Category Distribution</h3>
+                        <div class="h-48 w-full relative">
+                            <canvas id="donutCategoryChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bi-card rounded-2xl p-5 space-y-3 shadow">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">High-Risk Items Trend (SQLite History)</h3>
+                        <span class="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded border border-emerald-500/20">Real DB Tracking</span>
+                    </div>
+                    <div class="h-56 w-full relative">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="tab-risk" class="tab-content bi-card rounded-2xl p-5 space-y-4 shadow">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-emerald-400"></i> Drill-Through Analysis & Forecasts
+                    </h3>
+                    <span id="activeFilterBadge" class="text-xs font-mono bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">Showing: All Items</span>
+                </div>
+
+                <div class="overflow-x-auto max-h-[420px]">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900/90 text-slate-400 uppercase font-mono text-[10px] sticky top-0">
+                            <tr class="border-b border-slate-800">
+                                <th class="py-3 px-3">Product Name</th>
+                                <th class="py-3 px-3">Category</th>
+                                <th class="py-3 px-3">Risk Level</th>
+                                <th class="py-3 px-3">Days To Expire</th>
+                                <th class="py-3 px-3">Stock Units</th>
+                                <th class="py-3 px-3">AI Action Decision</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody" class="divide-y divide-slate-800/60">
+                            {% if inventory %}
+                                {% for item in inventory %}
+                                <tr class="inventory-row hover:bg-emerald-950/20 cursor-pointer transition"
+                                    data-risk="{{ item.risk_level }}"
+                                    data-category="{{ item.category }}"
+                                    data-product="{{ item.product }}"
+                                    data-days="{{ item.days_to_expire }}"
+                                    data-stock="{{ item.stock }}"
+                                    data-action="{{ item.action }}"
+                                    data-carbon="{{ item.carbon_saved }}"
+                                    data-forecast="{{ item.ml_forecast_days }}"
+                                    onclick="openAiModalFromRow(this)">
+                                    <td class="py-3 px-3 font-semibold text-slate-100 flex items-center gap-2">
+                                        <i class="fa-solid fa-circle-info text-emerald-400 text-[10px]"></i> {{ item.product }}
+                                    </td>
+                                    <td class="py-3 px-3 text-slate-400">{{ item.category }}</td>
+                                    <td class="py-3 px-3">
+                                        <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wider
+                                            {% if item.risk_level == 'High' %} bg-red-500/20 text-red-400 border border-red-500/40
+                                            {% elif item.risk_level == 'Medium' %} bg-amber-500/20 text-amber-400 border border-amber-500/40
+                                            {% else %} bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 {% endif %}">
+                                            {{ item.risk_level | upper }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-3 font-mono text-cyan-400">{{ item.days_to_expire }} days</td>
+                                    <td class="py-3 px-3 font-mono">{{ item.stock }} units</td>
+                                    <td class="py-3 px-3 font-bold text-emerald-400">{{ item.action }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-6 text-slate-500 italic">No dataset loaded yet. Please load demo data or upload an Excel file.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="aiModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bi-card bg-[#0b1326] border border-emerald-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-white">AI Decision Detail</h3>
+                        <p class="text-[10px] text-emerald-400 font-mono">Automated Action Notice</p>
+                    </div>
+                </div>
+                <button onclick="closeAiModal()" class="text-slate-400 hover:text-white text-base cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 grid grid-cols-2 gap-2">
+                    <div><span class="text-slate-400 block text-[10px]">Product Name:</span> <strong id="modalProd" class="text-white text-sm"></strong></div>
+                    <div><span class="text-slate-400 block text-[10px]">Category:</span> <strong id="modalCat" class="text-emerald-400"></strong></div>
+                    <div><span class="text-slate-400 block text-[10px]">Risk Priority:</span> <strong id="modalRisk" class="text-amber-400"></strong></div>
+                    <div><span class="text-slate-400 block text-[10px]">Forecast Window:</span> <strong id="modalMl" class="text-cyan-400"></strong></div>
+                </div>
+
+                <div class="bg-emerald-950/20 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
+                    <p class="font-bold text-emerald-300 flex items-center gap-2">
+                        <i class="fa-solid fa-sparkles"></i> Recommended Automated Strategy:
+                    </p>
+                    <p id="modalActionDesc" class="text-slate-200 leading-relaxed font-medium"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 font-mono text-[11px]">
+                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+                        <span class="text-slate-400 block text-[9px]">Carbon Prevented (est.)</span>
+                        <span id="modalCarbon" class="text-emerald-400 font-bold"></span>
+                    </div>
+                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-center">
+                        <span class="text-slate-400 block text-[9px]">Stock Affected</span>
+                        <span id="modalStock" class="text-cyan-400 font-bold"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeAiModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl text-xs transition shadow cursor-pointer">
+                    Acknowledge & Execute
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% set chart_payload = {
+        'high_risk_count': metrics.high_risk_count,
+        'medium_risk_count': metrics.medium_risk_count,
+        'low_risk_count': metrics.low_risk_count,
+        'secure_pct': metrics.secure_pct,
+        'trend_data': metrics.trend_data,
+        'categories': categories_json
+    } %}
+    <div id="chart-data" data-payload='{{ chart_payload | tojson }}' style="display:none"></div>
+
+    <script>
+        const chartPayload = JSON.parse(document.getElementById('chart-data').dataset.payload);
+        const highRiskCount = chartPayload.high_risk_count;
+        const medRiskCount = chartPayload.medium_risk_count;
+        const lowRiskCount = chartPayload.low_risk_count;
+        const securePct = chartPayload.secure_pct;
+        const trendHistory = chartPayload.trend_data;
+        const categoryCounts = chartPayload.categories;
+
+        const categoryLabels = Object.keys(categoryCounts);
+        const categoryDataVals = Object.values(categoryCounts);
+
+        function executeAiPipeline() {
+            fetch('/api/optimize', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('PIPELINE EXECUTED\n' + data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(() => alert('Network error executing pipeline.'));
+        }
+
+        function openAiModalFromRow(row) {
+            const product = row.dataset.product;
+            const category = row.dataset.category;
+            const risk = row.dataset.risk;
+            const days = row.dataset.days;
+            const stock = row.dataset.stock;
+            const action = row.dataset.action;
+            const carbon = row.dataset.carbon;
+            const forecast = row.dataset.forecast;
+
+            document.getElementById('modalProd').innerText = product;
+            document.getElementById('modalCat').innerText = category;
+            document.getElementById('modalRisk').innerText = risk + ' (' + days + ' days left)';
+            document.getElementById('modalMl').innerText = forecast + ' days remaining';
+            document.getElementById('modalCarbon').innerText = carbon + ' kg CO₂e';
+            document.getElementById('modalStock').innerText = stock + ' units';
+
+            let desc = "Model scored shelf-life velocity and temperature risk. Recommended action: " + action + ". Routing execution to local partner networks to maximize recovery.";
+            document.getElementById('modalActionDesc').innerText = desc;
+
+            document.getElementById('aiModal').classList.remove('hidden');
+        }
+
+        function closeAiModal() {
+            document.getElementById('aiModal').classList.add('hidden');
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById('tab-' + tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function filterTableByRisk(riskCategory) {
+            let rows = document.querySelectorAll('.inventory-row');
+            rows.forEach(row => {
+                let rowRisk = (row.getAttribute('data-risk') || '').trim().toLowerCase();
+                let targetRisk = riskCategory.trim().toLowerCase();
+
+                row.style.display = (targetRisk === 'all' || rowRisk === targetRisk) ? '' : 'none';
+            });
+
+            document.getElementById('activeFilterBadge').innerText = "Drill-Through Analysis: " + (riskCategory === 'all' ? 'All Items' : riskCategory + ' Priority');
+            switchTab('risk', document.querySelectorAll('.sidebar-btn')[1]);
+        }
+
+        function filterTableByCategory(categoryName) {
+            let rows = document.querySelectorAll('.inventory-row');
+            rows.forEach(row => {
+                let rowCat = (row.getAttribute('data-category') || '').trim().toLowerCase();
+                let targetCat = categoryName.trim().toLowerCase();
+
+                row.style.display = (rowCat === targetCat) ? '' : 'none';
+            });
+
+            document.getElementById('activeFilterBadge').innerText = "Drill-Through Category: " + categoryName;
+            switchTab('risk', document.querySelectorAll('.sidebar-btn')[1]);
+        }
+
+        function filterTableByDropdown(val) {
+            filterTableByRisk(val === 'all' ? 'all' : val);
+        }
+
+        const barCtx = document.getElementById('barPriorityChart').getContext('2d');
+        const barPriorityChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Medium', 'High', 'Low'],
+                datasets: [{
+                    data: [medRiskCount, highRiskCount, lowRiskCount],
+                    backgroundColor: ['#0f766e', '#ef4444', '#042f2e'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        let index = elements[0].index;
+                        let label = barPriorityChart.data.labels[index];
+                        filterTableByRisk(label);
+                    }
+                },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                    y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('gaugeCompletionChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [securePct, 100 - securePct],
+                    backgroundColor: ['#14b8a6', '#1e293b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                circumference: 180,
+                rotation: 270,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+
+        const donutCtx = document.getElementById('donutCategoryChart').getContext('2d');
+        const donutCategoryChart = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels.length > 0 ? categoryLabels : ['General Stock'],
+                datasets: [{
+                    data: categoryDataVals.length > 0 ? categoryDataVals : [1],
+                    backgroundColor: ['#0f766e', '#14b8a6', '#042f2e', '#0d9488', '#34d399', '#065f46', '#0284c7', '#7c3aed'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        let index = elements[0].index;
+                        let label = donutCategoryChart.data.labels[index];
+                        if (label !== 'General Stock') filterTableByCategory(label);
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 9 }, boxWidth: 8 } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('monthlyTrendChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Snapshot 1', 'Snapshot 2', 'Snapshot 3', 'Snapshot 4', 'Current State'],
+                datasets: [
+                    {
+                        label: 'High-risk items per snapshot',
+                        data: trendHistory,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        spanGaps: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12 } }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
