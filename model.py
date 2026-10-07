@@ -69,7 +69,6 @@ class FoodRescueAI:
                 badge_color = "emerald"
                 filter_group = "normal"
 
-            # risk_status -> risk_level (powerbi.html / sqlite tracking üçün)
             if risk_status == "Critical":
                 risk_level = "High"
             elif risk_status == "At Risk":
@@ -77,7 +76,6 @@ class FoodRescueAI:
             else:
                 risk_level = "Low"
 
-            # Sadə karbon qənaəti təxmini: endirimə/donation-a düşən stok üçün hesablanır
             if filter_group == "critical":
                 carbon_saved = round(stock * 0.18, 2)
             elif filter_group == "discount":

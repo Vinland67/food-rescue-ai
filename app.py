@@ -57,7 +57,6 @@ def get_history_trend():
     if not rows:
         return [0, 0, 0, 0, 0]
     values = [r[1] for r in reversed(rows)]
-    # 5 nöqtəyə qədər tamamla ki, qrafik boş qalmasın
     if len(values) < 5:
         values = [None] * (5 - len(values)) + values
     return values
@@ -95,15 +94,15 @@ def index():
     secure_items = [i for i in raw_inventory if i['filter_type'] == 'normal']
 
     return render_template('index.html',
-                            inventory=filtered_data,
-                            current_filter=active_filter,
-                            saved_food=saved_food_tons,
-                            saved_money=round(recovered_capital, 2),
-                            total_cost_value=round(total_cost, 2),
-                            total_sales_value=round(total_revenue, 2),
-                            total_potential_profit=round(net_profit, 2),
-                            wasted_risk_items=risk_items,
-                            safe_sold_items=secure_items)
+                           inventory=filtered_data,
+                           current_filter=active_filter,
+                           saved_food=saved_food_tons,
+                           saved_money=round(recovered_capital, 2),
+                           total_cost_value=round(total_cost, 2),
+                           total_sales_value=round(total_revenue, 2),
+                           total_potential_profit=round(net_profit, 2),
+                           wasted_risk_items=risk_items,
+                           safe_sold_items=secure_items)
 
 
 @app.route('/powerbi')
