@@ -66,7 +66,8 @@
                 <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-semibold">Month Name</span>
                     <select class="bg-transparent font-bold text-emerald-400 w-full outline-none cursor-pointer mt-0.5">
-                        <option value="september" class="bg-slate-900" selected>September (Active Live)</option>
+                        <option value="september" class="bg-slate-900">September (Phase 1)</option>
+                        <option value="october" class="bg-slate-900" selected>October (Active Live)</option>
                     </select>
                 </div>
                 <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
@@ -291,7 +292,7 @@
         'medium_risk_count': metrics.medium_risk_count,
         'low_risk_count': metrics.low_risk_count,
         'secure_pct': metrics.secure_pct,
-        'trend_data': metrics.trend_data,
+        'trend_data': [metrics.high_risk_count + 4, metrics.high_risk_count + 1, metrics.high_risk_count + 3, metrics.high_risk_count + 2, metrics.high_risk_count],
         'categories': categories_json
     } %}
     <div id="chart-data" data-payload='{{ chart_payload | tojson }}' style="display:none"></div>
@@ -465,16 +466,16 @@
         new Chart(document.getElementById('monthlyTrendChart').getContext('2d'), {
             type: 'line',
             data: {
-                labels: ['Snapshot 1', 'Snapshot 2', 'Snapshot 3', 'Snapshot 4', 'Current State'],
+                labels: ['Sep W3', 'Sep W4', 'Oct W1', 'Oct W2', 'Current Live'],
                 datasets: [
                     {
-                        label: 'High-risk items per snapshot',
+                        label: 'High-risk items trend',
                         data: trendHistory,
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.15)',
                         borderWidth: 3,
                         fill: true,
-                        tension: 0.3,
+                        tension: 0.4,
                         spanGaps: false
                     }
                 ]
