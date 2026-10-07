@@ -60,14 +60,15 @@
                 <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-semibold">Year</span>
                     <select class="bg-transparent font-bold text-slate-100 w-full outline-none cursor-pointer mt-0.5">
-                        <option value="2026" class="bg-slate-900">2026 (Current)</option>
+                        <option value="{{ current_year }}" class="bg-slate-900">{{ current_year }} (Current)</option>
                     </select>
                 </div>
                 <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-semibold">Month Name</span>
                     <select class="bg-transparent font-bold text-emerald-400 w-full outline-none cursor-pointer mt-0.5">
-                        <option value="september" class="bg-slate-900">September (Phase 1)</option>
-                        <option value="october" class="bg-slate-900" selected>October (Active Live)</option>
+                        {% for m in months_list %}
+                        <option value="{{ m.value }}" class="bg-slate-900" {% if m.is_current %}selected{% endif %}>{{ m.name }} {% if m.is_current %}(Active Live){% else %}(Archived){% endif %}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
@@ -292,7 +293,7 @@
         'medium_risk_count': metrics.medium_risk_count,
         'low_risk_count': metrics.low_risk_count,
         'secure_pct': metrics.secure_pct,
-        'trend_data': [metrics.high_risk_count + 4, metrics.high_risk_count + 1, metrics.high_risk_count + 3, metrics.high_risk_count + 2, metrics.high_risk_count],
+        'trend_data': metrics.trend_data,
         'categories': categories_json
     } %}
     <div id="chart-data" data-payload='{{ chart_payload | tojson }}' style="display:none"></div>
