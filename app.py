@@ -7,6 +7,9 @@ from datetime import datetime
 from model import FoodRescueAI
 
 app = Flask(__name__)
+
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 ai_engine = FoodRescueAI()
 
 DB_PATH = 'inventory_history.db'
@@ -231,6 +234,11 @@ def load_demo():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({"status": "error", "message": "Uploaded file is too large (Max limit is 16MB)."}), 413
+
+
 @app.route('/api/upload_excel', methods=['POST'])
 def upload_excel():
     if 'file' not in request.files:
@@ -300,4 +308,4 @@ def export_report():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
