@@ -187,31 +187,6 @@ def powerbi_analytics():
     return render_template('powerbi.html', inventory=raw_inventory, metrics=metrics, categories_json=category_counts, current_year=current_year, months_list=months_list)
 
 
-@app.route('/api/optimize', methods=['POST'])
-def api_optimize():
-    try:
-        raw_inventory = database_state["inventory"]
-        if not raw_inventory:
-            return jsonify({"status": "error", "message": "No inventory loaded to optimize."}), 400
-
-        changed = 0
-        for item in raw_inventory:
-            if item['filter_type'] == 'discount':
-                item['recommended_price'] = round(item['original_price'] * 0.5, 2)
-                item['action'] = "Deep Smart Discount (-50%)"
-                changed += 1
-
-        save_snapshot(raw_inventory)
-        return jsonify({
-            "status": "success",
-            "message": f"Pipeline executed. {changed} items re-priced.",
-            "saved_food": f"{changed} items optimized",
-            "saved_money": "recalculated"
-        })
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-
 @app.route('/api/load_demo', methods=['POST'])
 def load_demo():
     try:
