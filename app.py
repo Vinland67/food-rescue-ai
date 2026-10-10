@@ -15,25 +15,28 @@ ai_engine = FoodRescueAI()
 
 DB_PATH = 'inventory_history.db'
 
+# Hər istifadəçinin öz məlumatını ayrı saxlamaq üçün lüğət
 user_inventories = {}
 
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    # Cədvələ user_id sütunu əlavə edirik ki, hər kəsin tarixçəsi ayrı olsun
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS snapshots (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            timestamp TEXT,
-            total_skus INTEGER,
-            high_risk INTEGER,
-            saved_carbon REAL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT,
+                timestamp TEXT,
+                total_skus INTEGER,
+                high_risk INTEGER,
+                saved_carbon REAL
+            )
+        ''')
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("DB init error:", e)
 
 
 init_db()
@@ -47,42 +50,50 @@ def get_user_id():
 
 
 def save_snapshot(user_id, inventory):
-    if not inventory:
+    if not inventory or not user_id:
         return
-    total_skus = len(inventory)
-    high_risk = sum(1 for i in inventory if i.get('risk_level') == 'High')
-    saved_carbon = sum(i.get('carbon_saved', 0.0) for i in inventory)
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    try:
+        total_skus = len(inventory)
+        high_risk = sum(1 for i in inventory if i.get('risk_level') == 'High')
+        saved_carbon = sum(i.get('carbon_saved', 0.0) for i in inventory)
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT INTO snapshots (user_id, timestamp, total_skus, high_risk, saved_carbon) VALUES (?, ?, ?, ?, ?)',
-        (user_id, timestamp, total_skus, high_risk, saved_carbon)
-    )
-    conn.commit()
-    conn.close()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(
+            'INSERT INTO snapshots (user_id, timestamp, total_skus, high_risk, saved_carbon) VALUES (?, ?, ?, ?, ?)',
+            (user_id, timestamp, total_skus, high_risk, saved_carbon)
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("Snapshot save error:", e)
 
 
 def get_history_trend(user_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    # Yalnız həmin istifadəçiyə aid olan son 5 qeydi çəkirik
-    cursor.execute('SELECT timestamp, high_risk FROM snapshots WHERE user_id = ? ORDER BY id DESC LIMIT 5', (user_id,))
-    rows = cursor.fetchall()
-    conn.close()
-    
-    if not rows or len(rows) < 5:
-        base = rows[0][1] if rows else 4
-        return [max(1, base + 2), max(1, base - 1), max(1, base + 3), max(1, base + 1), base]
-
-    values = [r[1] for r in reversed(rows)]
-    
-    if len(set(values)) <= 1:
-        v = values[-1]
-        return [max(1, v + 3), max(1, v - 2), max(1, v + 2), max(1, v - 1), v]
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('SELECT timestamp, high_risk FROM snapshots WHERE user_id = ? ORDER BY id DESC LIMIT 5', (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
         
-    return values
+        if not rows or len(rows) < 5:
+            base = rows[0][1] if rows and rows[0] and rows[0][1] is not None else 4
+            return [max(1, base + 2), max(1, base - 1), max(1, base + 3), max(1, base + 1), base]
+
+        values = [r[1] for r in reversed(rows) if r[1] is not None]
+        if not values:
+            return [4, 3, 5, 4, 4]
+        
+        if len(set(values)) <= 1:
+            v = values[-1]
+            return [max(1, v + 3), max(1, v - 2), max(1, v + 2), max(1, v - 1), v]
+            
+        return values
+    except Exception as e:
+        print("Trend fetch error:", e)
+        return [4, 3, 5, 4, 4]
 
 
 @app.route('/')
