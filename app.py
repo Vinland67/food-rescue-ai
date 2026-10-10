@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, make_response
 import pandas as pd
 import io
 import sqlite3
 import calendar
+import uuid
 from datetime import datetime
 from model import FoodRescueAI
 
@@ -13,6 +14,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ai_engine = FoodRescueAI()
 
 DB_PATH = 'inventory_history.db'
+
+user_inventories = {}
 
 
 def init_db():
@@ -32,6 +35,13 @@ def init_db():
 
 
 init_db()
+
+
+def get_user_id():
+    user_id = request.cookies.get('user_session_id')
+    if not user_id:
+        user_id = str(uuid.uuid4())
+    return user_id
 
 
 def save_snapshot(inventory):
@@ -72,15 +82,12 @@ def get_history_trend():
     return values
 
 
-database_state = {
-    "inventory": []
-}
-
-
 @app.route('/')
 def index():
+    user_id = get_user_id()
+    raw_inventory = user_inventories.get(user_id, [])
+
     active_filter = request.args.get('filter', 'all')
-    raw_inventory = database_state["inventory"]
 
     if active_filter == 'critical':
         filtered_data = [i for i in raw_inventory if i['filter_type'] == 'critical']
@@ -103,7 +110,7 @@ def index():
     risk_items = [i for i in raw_inventory if i['filter_type'] in ['critical', 'discount']]
     secure_items = [i for i in raw_inventory if i['filter_type'] == 'normal']
 
-    return render_template('index.html',
+    resp = make_response(render_template('index.html',
                            inventory=filtered_data,
                            current_filter=active_filter,
                            saved_food=saved_food_tons,
@@ -112,12 +119,15 @@ def index():
                            total_sales_value=round(total_revenue, 2),
                            total_potential_profit=round(net_profit, 2),
                            wasted_risk_items=risk_items,
-                           safe_sold_items=secure_items)
+                           safe_sold_items=secure_items))
+    resp.set_cookie('user_session_id', user_id)
+    return resp
 
 
 @app.route('/powerbi')
 def powerbi_analytics():
-    raw_inventory = database_state["inventory"]
+    user_id = get_user_id()
+    raw_inventory = user_inventories.get(user_id, [])
 
     now = datetime.now()
     current_year = now.year
@@ -141,7 +151,9 @@ def powerbi_analytics():
             "high_risk_count": 0, "medium_risk_count": 0, "low_risk_count": 0,
             "efficiency": "0.0%", "secure_pct": 0.0, "trend_data": get_history_trend()
         }
-        return render_template('powerbi.html', inventory=[], metrics=metrics, categories_json={}, current_year=current_year, months_list=months_list)
+        resp = make_response(render_template('powerbi.html', inventory=[], metrics=metrics, categories_json={}, current_year=current_year, months_list=months_list))
+        resp.set_cookie('user_session_id', user_id)
+        return resp
 
     total_skus = len(raw_inventory)
     total_cost = sum([i['stock'] * i['cost_price'] for i in raw_inventory])
@@ -184,12 +196,15 @@ def powerbi_analytics():
         "trend_data": trend_vals
     }
 
-    return render_template('powerbi.html', inventory=raw_inventory, metrics=metrics, categories_json=category_counts, current_year=current_year, months_list=months_list)
+    resp = make_response(render_template('powerbi.html', inventory=raw_inventory, metrics=metrics, categories_json=category_counts, current_year=current_year, months_list=months_list))
+    resp.set_cookie('user_session_id', user_id)
+    return resp
 
 
 @app.route('/api/load_demo', methods=['POST'])
 def load_demo():
     try:
+        user_id = get_user_id()
         mock_df = pd.DataFrame([
             {'name': 'Organic Fresh Milk 1L', 'category': 'Dairy Products', 'daily_sales': 16, 'temperature': 4.2, 'days_to_expire': 1, 'stock': 80, 'price': 2.80, 'cost_price': 1.95},
             {'name': 'Artisan Sourdough Bread', 'category': 'Bakery & Grains', 'daily_sales': 35, 'temperature': 20.0, 'days_to_expire': 0, 'stock': 50, 'price': 1.20, 'cost_price': 0.70},
@@ -202,7 +217,7 @@ def load_demo():
             {'name': 'Aged Gouda Cheese', 'category': 'Dairy Products', 'daily_sales': 5, 'temperature': 19.0, 'days_to_expire': 15, 'stock': 40, 'price': 16.50, 'cost_price': 11.00}
         ])
         processed = ai_engine.process_inventory(mock_df)
-        database_state["inventory"] = processed
+        user_inventories[user_id] = processed
         save_snapshot(processed)
         return jsonify({"status": "success"})
     except Exception as e:
@@ -216,6 +231,7 @@ def request_entity_too_large(error):
 
 @app.route('/api/upload_excel', methods=['POST'])
 def upload_excel():
+    user_id = get_user_id()
     if 'file' not in request.files:
         return jsonify({"status": "error", "message": "No file uploaded"}), 400
 
@@ -234,7 +250,7 @@ def upload_excel():
             df = pd.read_excel(uploaded_file)
 
         processed = ai_engine.process_inventory(df)
-        database_state["inventory"] = processed
+        user_inventories[user_id] = processed
         save_snapshot(processed)
         return jsonify({"status": "success", "message": "File processed successfully"})
     except Exception as e:
@@ -243,13 +259,15 @@ def upload_excel():
 
 @app.route('/api/clear', methods=['POST'])
 def clear_data():
-    database_state["inventory"] = []
+    user_id = get_user_id()
+    user_inventories[user_id] = []
     return jsonify({"status": "success"})
 
 
 @app.route('/api/export_report', methods=['GET'])
 def export_report():
-    raw_inventory = database_state["inventory"]
+    user_id = get_user_id()
+    raw_inventory = user_inventories.get(user_id, [])
     if not raw_inventory:
         df = pd.DataFrame([{'Message': 'No active inventory data loaded.'}])
     else:
