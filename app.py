@@ -21,9 +21,11 @@ user_inventories = {}
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    # Cədvələ user_id sütunu əlavə edirik ki, hər kəsin tarixçəsi ayrı olsun
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
             timestamp TEXT,
             total_skus INTEGER,
             high_risk INTEGER,
@@ -44,7 +46,7 @@ def get_user_id():
     return user_id
 
 
-def save_snapshot(inventory):
+def save_snapshot(user_id, inventory):
     if not inventory:
         return
     total_skus = len(inventory)
@@ -55,17 +57,18 @@ def save_snapshot(inventory):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        'INSERT INTO snapshots (timestamp, total_skus, high_risk, saved_carbon) VALUES (?, ?, ?, ?)',
-        (timestamp, total_skus, high_risk, saved_carbon)
+        'INSERT INTO snapshots (user_id, timestamp, total_skus, high_risk, saved_carbon) VALUES (?, ?, ?, ?, ?)',
+        (user_id, timestamp, total_skus, high_risk, saved_carbon)
     )
     conn.commit()
     conn.close()
 
 
-def get_history_trend():
+def get_history_trend(user_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('SELECT timestamp, high_risk FROM snapshots ORDER BY id DESC LIMIT 5')
+    # Yalnız həmin istifadəçiyə aid olan son 5 qeydi çəkirik
+    cursor.execute('SELECT timestamp, high_risk FROM snapshots WHERE user_id = ? ORDER BY id DESC LIMIT 5', (user_id,))
     rows = cursor.fetchall()
     conn.close()
     
@@ -149,7 +152,7 @@ def powerbi_analytics():
         metrics = {
             "total_skus": 0, "total_cost": 0.0, "total_revenue": 0.0,
             "high_risk_count": 0, "medium_risk_count": 0, "low_risk_count": 0,
-            "efficiency": "0.0%", "secure_pct": 0.0, "trend_data": get_history_trend()
+            "efficiency": "0.0%", "secure_pct": 0.0, "trend_data": get_history_trend(user_id)
         }
         resp = make_response(render_template('powerbi.html', inventory=[], metrics=metrics, categories_json={}, current_year=current_year, months_list=months_list))
         resp.set_cookie('user_session_id', user_id)
@@ -182,7 +185,7 @@ def powerbi_analytics():
 
     secure_pct = round((secure_count / total_skus) * 100, 1) if total_skus > 0 else 0.0
     efficiency_val = round(90.0 + (secure_pct * 0.1), 1)
-    trend_vals = get_history_trend()
+    trend_vals = get_history_trend(user_id)
 
     metrics = {
         "total_skus": total_skus,
@@ -218,7 +221,7 @@ def load_demo():
         ])
         processed = ai_engine.process_inventory(mock_df)
         user_inventories[user_id] = processed
-        save_snapshot(processed)
+        save_snapshot(user_id, processed)
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -251,7 +254,7 @@ def upload_excel():
 
         processed = ai_engine.process_inventory(df)
         user_inventories[user_id] = processed
-        save_snapshot(processed)
+        save_snapshot(user_id, processed)
         return jsonify({"status": "success", "message": "File processed successfully"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
