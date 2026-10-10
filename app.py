@@ -1,7 +1,4 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_talisman import Talisman
 import pandas as pd
 import io
 import sqlite3
@@ -12,15 +9,6 @@ from model import FoodRescueAI
 app = Flask(__name__)
 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-Talisman(app, content_security_policy=False)
-
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
-)
 
 ai_engine = FoodRescueAI()
 
@@ -200,7 +188,6 @@ def powerbi_analytics():
 
 
 @app.route('/api/optimize', methods=['POST'])
-@limiter.limit("10 per minute")
 def api_optimize():
     try:
         raw_inventory = database_state["inventory"]
@@ -226,7 +213,6 @@ def api_optimize():
 
 
 @app.route('/api/load_demo', methods=['POST'])
-@limiter.limit("20 per minute")
 def load_demo():
     try:
         mock_df = pd.DataFrame([
@@ -253,13 +239,7 @@ def request_entity_too_large(error):
     return jsonify({"status": "error", "message": "Uploaded file is too large (Max limit is 16MB)."}), 413
 
 
-@app.errorhandler(429)
-def ratelimit_handler(e):
-    return jsonify({"status": "error", "message": "Rate limit exceeded. Please try again later."}), 429
-
-
 @app.route('/api/upload_excel', methods=['POST'])
-@limiter.limit("10 per minute")
 def upload_excel():
     if 'file' not in request.files:
         return jsonify({"status": "error", "message": "No file uploaded"}), 400
